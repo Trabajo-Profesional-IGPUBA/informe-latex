@@ -380,8 +380,43 @@ resultados = collection.query(
 % ─── 9.3 Embeddings ─────────────────────────────────────────────────────────
 \section*{9.3 Embeddings --- Sol}
 
-% TODO: Sol completa esta sección con su investigación sobre embeddings.
-\textit{[Pendiente --- Sol Urbano completará esta sección.]}
+\subsection*{Modelos de embeddings en español o bilingüe}
+
+En el contexto de este proyecto, donde la documentación técnica está predominantemente en español con terminología mixta del sector petrolero, la elección del modelo de embeddings resulta una decisión crítica que no puede limitarse a la opción genérica inicialmente planteada.
+
+Dentro de las alternativas gratuitas y de código abierto relevadas, se identificaron tres candidatos principales.
+
+El primero es \texttt{paraphrase-multilingual-MiniLM-L12-v2}, disponible en la librería sentence-transformers. Es uno de los modelos multilingües más utilizados dentro del ecosistema de embeddings en Hugging Face, soporta más de 50 idiomas incluyendo español, y puede ejecutarse en hardware modesto gracias a sus 384 dimensiones. Su principal limitación es un rendimiento inferior en tareas de recuperación semántica frente a modelos más recientes, por lo que se lo considera un punto de partida válido para validar el pipeline pero no necesariamente la opción final.
+
+El segundo candidato es \texttt{BGE-M3}, desarrollado por el Beijing Academy of Artificial Intelligence (BAAI) y disponible gratuitamente. Es uno de los modelos open-source más competitivos para recuperación multilingüe, con soporte para más de 100 idiomas. Su ventaja diferencial para este proyecto es que permite utilizar representaciones densas, dispersas y multi-vector según la configuración del pipeline, lo que mejora la precisión en dominios con vocabulario técnico específico como geología e ingeniería de petróleo. Es compatible con los principales frameworks de RAG y bases de datos vectoriales.
+
+El tercero es \texttt{jina-embeddings-v2-base-es}, un modelo bilingüe español/inglés desarrollado por Jina AI, disponible de forma gratuita. Fue entrenado específicamente para soportar entradas mixtas en ambos idiomas sin sesgo hacia ninguno, y admite ventanas de contexto extendidas (8192 tokens), lo que lo convierte en una opción relevante cuando los documentos históricos son extensos o cuando las consultas y el corpus combinan terminología en español e inglés, situación habitual en la industria petrolera argentina.
+
+También existe una colección de modelos fine-tuneados específicamente para español, publicada en Hugging Face bajo el usuario \texttt{mrm8488}, que podría resultar útil si el corpus es predominantemente en español y se requiere mayor precisión monolingüe.
+
+\subsection*{Comparación de sentence-transformers con otras opciones}
+
+La librería sentence-transformers no constituye un modelo en sí mismo, sino un framework que permite utilizar distintos modelos de embeddings mediante una interfaz unificada. Es importante aclarar que la calidad de los embeddings no depende del framework, sino del modelo específico que se utilice.
+
+En este contexto, la comparación relevante se centra en los modelos de embeddings disponibles de forma gratuita y con capacidad de ejecución local.
+
+\texttt{paraphrase-multilingual-MiniLM-L12-v2} dentro del framework sentence-transformers es rápido, liviano y bien documentado, pero su rendimiento en recuperación semántica en español es inferior al de alternativas más modernas. Es adecuado para prototipar el sistema y validar la integración de componentes en las primeras etapas.
+
+\texttt{BGE-M3} representa uno de los modelos open-source más competitivos para recuperación multilingüe. Su capacidad de combinar distintas estrategias de representación permite mejorar la precisión en dominios con vocabulario técnico específico como el analizado. Es compatible con los principales frameworks de RAG y herramientas de bases de datos vectoriales.
+
+\texttt{jina-embeddings-v2-base-es} se diferencia por su diseño bilingüe nativo y su soporte de contexto extendido, lo que lo convierte en una alternativa particularmente adecuada para documentos técnicos de gran tamaño y entornos donde coexisten ambos idiomas.
+
+La conclusión práctica es que la elección entre estos modelos no puede hacerse de antemano: debe resolverse mediante experimentación sobre documentos reales del dominio, utilizando métricas de recuperación como Top-K accuracy o nDCG@10.
+
+\subsection*{Cómo afecta el idioma a la calidad de los embeddings}
+
+El idioma del corpus es uno de los factores que más impacta en la calidad de la recuperación semántica y, al mismo tiempo, uno de los que con mayor frecuencia se subestima al diseñar sistemas RAG.
+
+El primer problema es la subrepresentación del español en los modelos generales. Análisis comparativos muestran que en muchos modelos multilingües tradicionales el español obtiene métricas de recuperación más bajas que el inglés, el alemán o el chino, incluso en modelos entrenados con datos multilingües. La causa es que los corpus de preentrenamiento están dominados por texto en inglés, lo que sesga el espacio vectorial resultante y degrada la calidad de los embeddings para otros idiomas.
+
+El segundo problema es el vocabulario técnico de dominio. Los modelos de embeddings generales no han sido expuestos a terminología específica como cuencas maduras, registros de producción, workover o intervenciones, conceptos centrales en este proyecto. Esto genera que términos técnicamente relacionados queden distantes en el espacio vectorial, perjudicando la recuperación de documentos relevantes ante consultas especializadas.
+
+El tercer problema es el alineamiento semántico entre idiomas. En modelos multilingües, no alcanza con que el modelo soporte múltiples idiomas: lo que determina la calidad de la recuperación cross-lingual es si el grado de alineamiento cross-lingual del espacio vectorial compartido es suficiente. Un buen alineamiento implica que un término como ``reservoir'' en inglés y ``yacimiento'' en español tiendan a estar cercanos en el espacio vectorial. Sin ese alineamiento, una consulta en español no recuperará correctamente documentos con terminología en inglés aunque sean semánticamente equivalentes. Dado que los informes históricos en la industria petrolera argentina suelen mezclar ambos idiomas, este aspecto es particularmente relevante para el proyecto.
 
 % ─── 9.4 ETL y OCR ──────────────────────────────────────────────────────────
 \section*{9.4 ETL y OCR --- Tomás}
