@@ -419,10 +419,101 @@ El segundo problema es el vocabulario técnico de dominio. Los modelos de embedd
 El tercer problema es el alineamiento semántico entre idiomas. En modelos multilingües, no alcanza con que el modelo soporte múltiples idiomas: lo que determina la calidad de la recuperación cross-lingual es si el grado de alineamiento cross-lingual del espacio vectorial compartido es suficiente. Un buen alineamiento implica que un término como ``reservoir'' en inglés y ``yacimiento'' en español tiendan a estar cercanos en el espacio vectorial. Sin ese alineamiento, una consulta en español no recuperará correctamente documentos con terminología en inglés aunque sean semánticamente equivalentes. Dado que los informes históricos en la industria petrolera argentina suelen mezclar ambos idiomas, este aspecto es particularmente relevante para el proyecto.
 
 % ─── 9.4 ETL y OCR ──────────────────────────────────────────────────────────
-\section*{9.4 ETL y OCR --- Tomás}
+\section*{9.4 Ingesta de Documentos al Sistema}
 
-% TODO: Tomi completa esta sección con su investigación sobre ETL y OCR.
-\textit{[Pendiente --- Tomás Lanfranco completará esta sección.]}
+El primer paso de nuestra pipeline en la construcción de la base del conocimiento del RAG es la ingesta de documentos, típicamente mediante algún mecanismo de OCR o extracción de texto, según el tipo de documento esperado.
+
+\subsection*{Comparación de herramientas}
+Se realizo una comparación general de herramientas comúnmente usadas en esta etapa del sistema.
+
+\subsubsection*{PyTesseract}
+\begin{itemize}
+    \item Librería de OCR que hace uso del motor de Tesseract.
+    \item Muy sensible a la calidad de la imagen, por lo que se lo recomienda para extraer texto de imágenes legibles o PDFs escaneados.
+    \item Requiere cierto setup para correr localmente.
+    \item No extrae tablas correctamente.
+    \item No preserva la estructura del documento.
+\end{itemize}
+
+\subsubsection*{EasyOCR}
+\begin{itemize}
+    \item Librería de OCR que usa modelos de deep learning por debajo.
+    \item Enfocado en la extracción texto de imágenes en diversas condiciones, sin preprocesamiento previo.
+    \item No extrae tablas correctamente.
+    \item No preserva la estructura del documento.
+\end{itemize}
+
+\subsubsection*{Docling}
+\begin{itemize}
+    \item Framework de procesamiento de documentos de texto sin estructurar.
+    \item Integración rápida con frameworks como Langchain, LlamaIndex o Haystack.
+    \item Preserva la estructura semántica del texto.
+    \item Puede extraer tablas.
+\end{itemize}
+
+\subsubsection*{LlamaParse}
+\begin{itemize}
+    \item Plataforma de procesamiento de documentos basada en Gen-AI.
+    \item Específicamente diseñado para soportar estructuras complejas como gráficos, tablas, etc.
+    \item Muy rápido y escalable.
+    \item Uso gratuito limitado (~1000 paginas/día).
+    \item Los documentos son procesados de forma remota, comprometiendo la confidencialidad.
+    \item Logra preservar la estructura semántica del texto,
+\end{itemize}
+
+\subsubsection*{Unstructured}
+\begin{itemize}
+    \item Plataforma de Procesamiento de documentos de texto.
+    \item Lento.
+    \item Puede extraer tablas.
+    \item Logra preservar la estructura semántica del texto.
+\end{itemize}
+
+\subsection*{Recomendación para el proyecto}
+
+Dada la naturaleza de los tipos de documentos a usar, la herramienta que mejor se adapta a nuestros objetivos es Docling, pues es fácil de integrar, tiene un buen rendimiento, es gratuito y provee confidencialidad.
+
+\subsection*{9.5 Chunking}
+
+Una vez se procesan los documentos, estos son partidos en diversos chunks usando alguna estrategia de chunking.
+
+\subsubsection*{Comparación Estrategias}
+\begin{itemize}
+    \item Fixed-Size chunking: se separa el documento en chunks de un tamaño determinado, permitiendo cierto solapamiento. Ignora la semántica del documento completamente, por lo que es poco eficaz.
+    \item Recusive Chunking: se crean chunks en base a separadores, permitiendo separar en párrafos.
+    \item Hyerarchical Chunking: se generan chunks "padres", correspondientes a secciones del texto, y chunks "hijos", que incluyen párrafos y oraciones mas especificas, permitiendo mantener un contexto y distintos niveles de granularidad.
+    \item Semantic Chunking: se crean chunks a partir de oraciones de semántica similar según un modelo de embedding.
+    \item Agentic Chunking: se usa un modelo de LLM para lograr un particionamiento adaptado al contenido y preservando en contexto, aunque es mas costoso que otros métodos.
+    \item Context-Enriched Chunking: Se usa
+\end{itemize}
+
+\subsubsection{La Mejor Estrategia para el Trabajo}
+Como en la sección anterior mencionamos la elección de Docling, cabe mencionar que este incluye su propia implementación de chunking de la cual podemos hacer uso, apoyándose en sus capacidades de extraer la estructura del texto de forma precisa.Esta es nombrada como Hybrid Chunking: consiste en aplicar un tokenizado sobre los chunks generados por un chunking jerárquico, evitando tener chunks demasiado grandes sin perder la ventaja del contexto que proveen.
+\textbf{Es importante que el tokenizador usado sea el mismo que el de embeddings}
+
+\begin{lstlisting}[caption={Ejemplo de uso de HybridChunking}]
+from docling.document_converter import DocumentConverter
+from docling.chunking import HybridChunker
+from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
+from transformers import AutoTokenizer
+
+doc = DocumentConverter().convert(source=DOC_SOURCE).document
+
+EMBED_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
+MAX_TOKENS = 64  # set to a small number for illustrative purposes
+
+tokenizer = HuggingFaceTokenizer(
+    tokenizer=AutoTokenizer.from_pretrained(EMBED_MODEL_ID),
+    max_tokens=MAX_TOKENS,  # optional, by default derived from `tokenizer` for HF case
+)
+
+chunker = HybridChunker(
+    tokenizer=tokenizer,
+    merge_peers=True,  # optional, defaults to True
+)
+chunk_iter = chunker.chunk(dl_doc=doc)
+chunks = list(chunk_iter)
+\end{lstlisting}
 
 % ════════════════════════════════════════════════════════════════════════════
 \chapter*{10. Riesgos Materializados y Lecciones Aprendidas}
