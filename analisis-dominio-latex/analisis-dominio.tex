@@ -1,0 +1,1210 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Encoding & language ───────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, provide=*]{babel}
+
+% ── Font ──────────────────────────────────────────────────────────────────────
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{microtype}
+
+% ── Layout ────────────────────────────────────────────────────────────────────
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{parskip}
+
+% ── Color & graphics ──────────────────────────────────────────────────────────
+\usepackage{xcolor}
+\definecolor{primaryblue}{HTML}{1A3A6B}
+\definecolor{accentblue}{HTML}{2E5FA3}
+\definecolor{lightblue}{HTML}{EAF0FA}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codetxt}{HTML}{2C2C2C}
+\definecolor{mygray}{HTML}{666666}
+
+% ── Section headings ──────────────────────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}
+  {\color{primaryblue}\large\bfseries}
+  {\thesection.}{0.6em}{}
+  [\vspace{2pt}{\color{accentblue}\hrule height 0.4pt}\vspace{4pt}]
+\titleformat{\subsection}
+  {\color{accentblue}\normalsize\bfseries}
+  {\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{18pt}{8pt}
+\titlespacing*{\subsection}{0pt}{12pt}{4pt}
+
+% ── Header / footer ───────────────────────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{mygray}An\'{a}lisis del Dominio~---~Cuencas Maduras}
+\fancyhead[R]{\small\color{mygray}Petr\'{o}leo y Gas}
+\fancyfoot[C]{\small\color{mygray}\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% ── Tables ────────────────────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\newcolumntype{B}{>{\bfseries\raggedright\arraybackslash}p{3.8cm}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+% ── Lists ─────────────────────────────────────────────────────────────────────
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=1.4em, itemsep=2pt, topsep=4pt}
+\setlist[itemize,1]{label={\color{accentblue}\textbullet}}
+
+% ── Fragment box ──────────────────────────────────────────────────────────────
+\usepackage{mdframed}
+\newmdenv[
+  leftline=true, rightline=false, topline=false, bottomline=false,
+  linewidth=3pt, linecolor=accentblue,
+  backgroundcolor=codebg,
+  innerleftmargin=10pt, innerrightmargin=8pt,
+  innertopmargin=6pt, innerbottommargin=6pt,
+  skipabove=6pt, skipbelow=6pt,
+  font=\small\ttfamily\color{codetxt}
+]{fragmentbox}
+
+% ── Hyperref ──────────────────────────────────────────────────────────────────
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true, linkcolor=accentblue, urlcolor=accentblue,
+  pdftitle={Analisis del Dominio - Cuencas Maduras}
+}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── Cover ─────────────────────────────────────────────────────────────────────
+\begin{titlepage}
+  \color{primaryblue}
+  \vspace*{3cm}
+  \begin{center}
+    {\fontsize{34}{42}\selectfont\bfseries AN\'{A}LISIS DEL DOMINIO\par}
+    \vspace{0.9cm}
+    {\Large Sistema RAG para gesti\'{o}n del conocimiento t\'{e}cnico en cuencas maduras\par}
+    \vspace{1.4cm}
+  \end{center}
+\end{titlepage}
+
+% ── TOC ───────────────────────────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introducci\'{o}n}
+
+Este documento presenta el an\'{a}lisis del dominio correspondiente a la gesti\'{o}n del
+conocimiento t\'{e}cnico en cuencas maduras dentro de la industria del petr\'{o}leo y gas.
+El an\'{a}lisis parte de la revisi\'{o}n de documentaci\'{o}n t\'{e}cnica real disponible e
+identifica los desaf\'{i}os concretos que presenta su procesamiento y aprovechamiento.
+
+El objetivo es caracterizar la informaci\'{o}n hist\'{o}rica disponible: c\'{o}mo est\'{a}
+organizada, en qu\'{e} formatos existe y qu\'{e} tan dispersa se encuentra. Esto sirve de base
+para validar y ajustar los requisitos de un sistema de recuperaci\'{o}n de informaci\'{o}n
+t\'{e}cnica asistido por RAG (\textit{Retrieval-Augmented Generation}).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{El Problema Detectado}
+
+En el contexto de cuencas maduras, las decisiones t\'{e}cnicas tomadas a lo largo de
+d\'{e}cadas quedan registradas en grandes vol\'{u}menes de documentaci\'{o}n: informes de
+intervenciones, diagramas de completaci\'{o}n y registros operativos. Esta informaci\'{o}n
+representa un activo importante, ya que refleja qu\'{e} funcion\'{o} y qu\'{e} no en
+situaciones concretas a lo largo del tiempo.
+
+El problema central identificado es que \textbf{dicha documentaci\'{o}n no est\'{a}
+centralizada ni estructurada}. Consultar antecedentes de un pozo o buscar experiencias
+previas en situaciones similares requiere revisar manualmente archivos dispersos.
+
+En la pr\'{a}ctica, esto genera dos consecuencias directas:
+
+\begin{itemize}
+  \item El conocimiento acumulado no se aprovecha de forma eficiente.
+  \item Aumenta el riesgo de repetir errores ya documentados y se dificulta la
+        transferencia de experiencia entre profesionales del sector.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Categor\'{i}as de Documentaci\'{o}n T\'{e}cnica Identificadas}
+
+A partir del an\'{a}lisis del dominio se identificaron cuatro grandes categor\'{i}as de
+documentaci\'{o}n t\'{e}cnica relevante, cada una con caracter\'{i}sticas propias en cuanto
+a formato, estructura y valor para el sistema.
+
+% ── 3.1 ───────────────────────────────────────────────────────────────────────
+\subsection{Documentos de Ingenier\'{i}a y Completaci\'{o}n}
+
+Estos documentos aportan el contexto f\'{i}sico y estructural de cada activo. Incluyen:
+
+\begin{itemize}
+  \item \textbf{Diagramas de Completaci\'{o}n Mec\'{a}nica (\textit{Wellbore Schematics}):}
+        historial de esquemas mec\'{a}nicos (actuales y pasados) que muestran la profundidad de
+        los liners, packers, calados (perforaciones) y el estado del casing.
+  \item \textbf{Informes Finales de Perforaci\'{o}n (\textit{End of Well Reports} --- EWR):}
+        datos sobre la trayectoria del pozo, problemas encontrados durante la perforaci\'{o}n
+        (p\'{e}rdidas de circulaci\'{o}n, aprisionamientos) y cementaci\'{o}n.
+  \item \textbf{Registros de Pozos (\textit{Well Logs} --- informes textuales):}
+        interpretaciones de registros el\'{e}ctricos, de porosidad, permeabilidad o perfiles de
+        producci\'{o}n (PLT).
+\end{itemize}
+
+% ── 3.2 ───────────────────────────────────────────────────────────────────────
+\subsection{Historial de Intervenciones y Reparaciones}
+
+Considerada \textbf{la fuente de mayor valor para el sistema}, dado que concentra el
+conocimiento de qu\'{e} funcion\'{o} y qu\'{e} no. Incluye:
+
+\begin{itemize}
+  \item \textbf{Informes de Workover y Pulling:} res\'{u}menes de operaciones de reparaci\'{o}n
+        donde se detallan cambios de sistema de extracci\'{o}n, pescas (\textit{fishing}),
+        reparaciones de casing o aislamientos.
+  \item \textbf{Partes Diarios de Operaciones (\textit{Daily Drilling/Workover Logs}):} notas
+        diarias de los supervisores de campo (\textit{Company Man}), con alta riqueza en texto
+        libre, jerga t\'{e}cnica, problemas inesperados y soluciones improvisadas.
+  \item \textbf{Historial de Estimulaciones:} informes de fracturamiento hidr\'{a}ulico,
+        acidificaciones o tratamientos qu\'{i}micos (solventes, inhibidores de incrustaciones).
+\end{itemize}
+
+% ── 3.3 ───────────────────────────────────────────────────────────────────────
+\subsection{Lecciones Aprendidas --- Informes de An\'{a}lisis de Falla}
+
+El documento de an\'{a}lisis distingue expl\'{i}citamente esta categor\'{i}a como fuente
+aut\'{o}noma de conocimiento. Son documentos generados por el equipo de producci\'{o}n o
+por proveedores del equipo (por ejemplo, Baker Hughes, SLB) cuando un sistema falla
+inesperadamente. Su estructura t\'{i}pica incluye: descripci\'{o}n del equipo, conclusi\'{o}n
+del an\'{a}lisis, causa ra\'{i}z y lecci\'{o}n aprendida.
+
+A diferencia de los partes diarios ---que narran lo que ocurri\'{o}--- estos documentos
+sintetizan \textbf{por qu\'{e} ocurri\'{o} y c\'{o}mo evitarlo}, constituyendo la forma m\'{a}s
+densa de conocimiento transferible del corpus.
+
+% ── 3.4 ───────────────────────────────────────────────────────────────────────
+\subsection{Estudios de Reservorio y Geolog\'{i}a}
+
+Aportan el contexto del entorno y permiten distinguir si el comportamiento de un pozo es
+aislado o responde a una din\'{a}mica del yacimiento. Incluyen:
+
+\begin{itemize}
+  \item \textbf{Informes de Caracterizaci\'{o}n de Reservorios:} estudios sobre la
+        continuidad de las arenas, presiones de burbuja, mecanismos de empuje.
+  \item \textbf{Informes de Proyectos de Inyecci\'{o}n (Recuperaci\'{o}n Secundaria/Terciaria):}
+        datos sobre comportamiento de pozos inyectores, eficiencias de barrido y respuestas en
+        pozos productores vecinos.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{An\'{a}lisis de Documentos T\'{e}cnicos Reales}
+
+A continuaci\'{o}n se describen los tipos de documentos relevados con sus caracter\'{i}sticas
+concretas de formato, estructura y legibilidad, tal como emergen de los ejemplos del corpus.
+
+% ── 4.1 ───────────────────────────────────────────────────────────────────────
+\subsection{Informe Final de Perforaci\'{o}n (EWR)}
+
+\begin{tabularx}{\textwidth}{BL}
+  \toprule
+  \textbf{Campo} & \textbf{Detalle} \\
+  \midrule
+  Ejemplo analizado   & Informe Final de Perforaci\'{o}n --- Pozo PM-104 (2012) \\
+  \addlinespace
+  Formato t\'{i}pico  & PDF extenso (puede superar las 200 p\'{a}ginas) \\
+  \addlinespace
+  Estructura          & Texto sin estructurar, enterrado en secciones espec\'{i}ficas \\
+  \addlinespace
+  Tipo de contenido   & Texto libre con datos t\'{e}cnicos precisos: profundidades, formaciones,
+                        incidentes y recomendaciones \\
+  \addlinespace
+  Desaf\'{i}o         & Contenido relevante fragmentado dentro de documentos muy extensos;
+                        requiere extracci\'{o}n por secci\'{o}n \\
+  \bottomrule
+\end{tabularx}
+
+\vspace{6pt}
+\textit{Fragmento representativo:}
+
+\begin{fragmentbox}
+Durante la carrera de bajada del casing de 9 5/8" a los 2.450 metros mdf, se detecto
+una perdida de circulacion severa de aprox. 15 m3/h en la formacion Quintuco. [...]
+Se recomendo para futuros pozos colindantes en el bloque reducir el peso del lodo a
+un maximo de 1.15 g/cm3 al atravesar este intervalo para evitar fracturar la formacion.
+\end{fragmentbox}
+
+Este fragmento ilustra el valor de la informaci\'{o}n contenida: incluye una recomendaci\'{o}n
+operativa concreta derivada de un incidente real, con par\'{a}metros t\'{e}cnicos
+espec\'{i}ficos (formaci\'{o}n, profundidad, tasa de p\'{e}rdida, soluci\'{o}n aplicada y
+l\'{i}mite recomendado).
+
+% ── 4.2 ───────────────────────────────────────────────────────────────────────
+\subsection{Informes T\'{e}cnicos de Workover}
+
+\begin{tabularx}{\textwidth}{BL}
+  \toprule
+  \textbf{Campo} & \textbf{Detalle} \\
+  \midrule
+  Ejemplo analizado   & Informe T\'{e}cnico de Workover --- Pozo LL-205 (2019) \\
+  \addlinespace
+  Formato t\'{i}pico  & Documento t\'{e}cnico estructurado por secciones de operaci\'{o}n \\
+  \addlinespace
+  Tipo de contenido   & Descripci\'{o}n secuencial de operaciones, problemas encontrados,
+                        soluciones aplicadas y recomendaciones \\
+  \addlinespace
+  Desaf\'{i}o         & Terminolog\'{i}a t\'{e}cnica espec\'{i}fica (overshot, pez, varillas,
+                        packers); uso de unidades de medida mixtas \\
+  \bottomrule
+\end{tabularx}
+
+\vspace{6pt}
+\textit{Fragmento representativo:}
+
+\begin{fragmentbox}
+Se bajo una herramienta de pesca tipo overshot de 2 3/8" con grapa espiral. Tras dos
+intentos de enganche fallidos debido a la presencia de parafina pesada en el fondo,
+se realizo una circulacion de 20 m3 de gasoil caliente para limpiar la cabeza del "pez".
+El tercer intento de pesca fue exitoso.
+\end{fragmentbox}
+
+% ── 4.3 ───────────────────────────────────────────────────────────────────────
+\subsection{Informes de Estimulaci\'{o}n (Fractura Hidr\'{a}ulica)}
+
+\begin{tabularx}{\textwidth}{BL}
+  \toprule
+  \textbf{Campo} & \textbf{Detalle} \\
+  \midrule
+  Ejemplo analizado   & Informe de Estimulaciones y Fracturas --- Pozo CH-45 (2021) \\
+  \addlinespace
+  Formato t\'{i}pico  & Informe t\'{e}cnico con secciones por etapa de tratamiento \\
+  \addlinespace
+  Tipo de contenido   & Datos de presi\'{o}n, tasas de inyecci\'{o}n, eventos cr\'{i}ticos
+                        durante el bombeo y recomendaciones operativas \\
+  \addlinespace
+  Desaf\'{i}o         & Alta densidad de valores num\'{e}ricos; eventos cr\'{i}ticos
+                        (\textit{screen-out}) descriptos con terminolog\'{i}a t\'{e}cnica
+                        espec\'{i}fica \\
+  \bottomrule
+\end{tabularx}
+
+% ── 4.4 ───────────────────────────────────────────────────────────────────────
+\subsection{Informes de An\'{a}lisis de Falla (Lecciones Aprendidas)}
+
+\begin{tabularx}{\textwidth}{BL}
+  \toprule
+  \textbf{Campo} & \textbf{Detalle} \\
+  \midrule
+  Ejemplos analizados & Pozo YPF-X2 (2017); Pozos PM-104, LL-112, CH-88, VM-143, LP-502
+                        (2021--2025) \\
+  \addlinespace
+  Formato t\'{i}pico  & Informe t\'{e}cnico con identificaci\'{o}n del equipo,
+                        conclusi\'{o}n del an\'{a}lisis y causa ra\'{i}z \\
+  \addlinespace
+  Tipo de contenido   & Mecanismo de da\~{n}o, causa ra\'{i}z, lecci\'{o}n aprendida y
+                        recomendaci\'{o}n para futuras operaciones \\
+  \addlinespace
+  Valor para el sistema & Alta densidad de lecciones aprendidas transferibles a pozos con
+                          condiciones similares \\
+  \addlinespace
+  Desaf\'{i}o         & Requiere asociar la falla documentada con condiciones del yacimiento
+                        (GOR, temperatura, corte de agua) que pueden estar en documentos de
+                        reservorio \\
+  \bottomrule
+\end{tabularx}
+
+% ── 4.5 ───────────────────────────────────────────────────────────────────────
+\subsection{Partes Diarios de Operaciones (\textit{Company Man Logs})}
+
+\begin{tabularx}{\textwidth}{BL}
+  \toprule
+  \textbf{Campo} & \textbf{Detalle} \\
+  \midrule
+  Ejemplos analizados & Pozos PM-104 (2018), ST-82 (2024), LP-15 (2025),
+                        VM-210 (2023), PI-44 (2026) \\
+  \addlinespace
+  Formato t\'{i}pico  & Texto libre cronol\'{o}gico con entradas por hora \\
+  \addlinespace
+  Estructura          & No estructurado; altamente dependiente del estilo del supervisor \\
+  \addlinespace
+  Tipo de contenido   & Relato operativo en tiempo real: presiones, maniobras, hallazgos,
+                        decisiones tomadas en campo \\
+  \addlinespace
+  Desaf\'{i}o         & Formato m\'{a}s dif\'{i}cil del corpus: abreviaturas (AIB, BES, PCP,
+                        VSD, BOP, LCM), jerga de campo, unidades variadas y referencias
+                        impl\'{i}citas a equipos y pozos \\
+  \bottomrule
+\end{tabularx}
+
+\vspace{6pt}
+\textit{Fragmento representativo --- Parte Diario PM-104 (14/05/2018):}
+
+\begin{fragmentbox}
+08:00 - Se constata pozo parado por rotura de varillas. Presion de casing: 50 psi.
+Presion de tubing: 0 psi.
+[...]
+A la altura de la varilla 43 se encuentra punto de corte (fatiga por corrosion severa).
+[...]
+Se extrae el resto de la sarta y la bomba de profundidad (mecanismo trabado por
+presencia de incrustaciones de carbonato/bicarbonato).
+\end{fragmentbox}
+
+El documento de an\'{a}lisis se\~{n}ala expl\'{i}citamente que este es \textbf{el formato m\'{a}s
+dif\'{i}cil del corpus}, y que es donde el RAG ``brilla si est\'{a} bien entrenado''.
+
+% ── 4.6 ───────────────────────────────────────────────────────────────────────
+\subsection{Informes de Seguimiento de Inyecci\'{o}n (Recuperaci\'{o}n Secundaria)}
+
+\begin{tabularx}{\textwidth}{BL}
+  \toprule
+  \textbf{Campo} & \textbf{Detalle} \\
+  \midrule
+  Ejemplo analizado   & Informe de Seguimiento de Inyecci\'{o}n --- Pozo PI-08 (2024) \\
+  \addlinespace
+  Formato t\'{i}pico  & Informe t\'{e}cnico de seguimiento con an\'{a}lisis de datos de
+                        trazadores \\
+  \addlinespace
+  Tipo de contenido   & Velocidades de avance de trazadores, conectividad entre pozos,
+                        comportamiento del corte de agua y acciones correctivas \\
+  \addlinespace
+  Desaf\'{i}o         & Requiere relacionar pozos inyectores con pozos productores
+                        colindantes; conectividad impl\'{i}cita entre documentos de diferentes
+                        pozos \\
+  \bottomrule
+\end{tabularx}
+
+% ── 4.7 ───────────────────────────────────────────────────────────────────────
+\subsection{Documentos de Caracterizaci\'{o}n de Reservorios y Geolog\'{i}a}
+
+\begin{tabularx}{\textwidth}{BL}
+  \toprule
+  \textbf{Campo} & \textbf{Detalle} \\
+  \midrule
+  Ejemplos analizados & Informe Estructural Bloque Central (2022); Informe PVT Los Perales
+                        (2024); Piloto EOR Bloque Sur (2025); Estudio Sedimentol\'{o}gico
+                        Chall\'{a}co (2023) \\
+  \addlinespace
+  Formato t\'{i}pico  & Informes t\'{e}cnicos con secciones de an\'{a}lisis e interpretaci\'{o}n \\
+  \addlinespace
+  Tipo de contenido   & Presi\'{o}n est\'{a}tica, presi\'{o}n de burbuja, comportamiento de
+                        fases, conectividad estructural, continuidad de arenas \\
+  \addlinespace
+  Valor para el sistema & Permiten contextualizar comportamientos de pozos individuales
+                          dentro de la din\'{a}mica del yacimiento; explican causas no visibles
+                          desde el historial del pozo solo \\
+  \bottomrule
+\end{tabularx}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Desaf\'{i}os Concretos del Procesamiento de la Documentaci\'{o}n}
+
+% ── 5.1 ───────────────────────────────────────────────────────────────────────
+\subsection{Diversidad de Formatos y Estructuras}
+
+El corpus documental presenta una heterogeneidad marcada: los EWR son PDFs extensos con
+texto no estructurado; los partes diarios son texto libre cronol\'{o}gico; los informes de
+an\'{a}lisis de falla tienen estructura narrativa de causa-efecto; los estudios de reservorio
+combinan texto t\'{e}cnico con datos num\'{e}ricos de laboratorio. Esta diversidad requiere
+estrategias de ingesta diferenciadas seg\'{u}n el tipo de documento.
+
+% ── 5.2 ───────────────────────────────────────────────────────────────────────
+\subsection{Alta Densidad de Terminolog\'{i}a T\'{e}cnica y Abreviaturas}
+
+El dominio utiliza un vocabulario altamente especializado con m\'{u}ltiples formas de
+referirse al mismo concepto:
+
+\begin{itemize}
+  \item Las siglas BES, VSD, DIFA, AIB, PCP, BOP, LCM, GOR, PLT, RFT, MIT, EWR, HPAM,
+        AGH y PMM refieren a equipos, operaciones y m\'{e}tricas espec\'{i}ficas del sector.
+  \item Las profundidades se expresan en metros mdf,
+        lo que implica un marco de referencia espec\'{i}fico para su correcta interpretaci\'{o}n.
+\end{itemize}
+
+% ── 5.3 ───────────────────────────────────────────────────────────────────────
+\subsection{Dispersi\'{o}n y Falta de Centralizaci\'{o}n}
+
+La informaci\'{o}n est\'{a} dispersa entre m\'{u}ltiples documentos de distinta
+antig\"{u}edad, origen y equipo emisor. El pozo PM-104 aparece en: un EWR de 2012, un
+parte diario de 2018, un informe de an\'{a}lisis de falla BES de 2021, un informe estructural
+de 2022 y un informe PVT de 2024. Ninguno de estos documentos tiene referencias cruzadas
+expl\'{i}citas entre s\'{i}.
+
+% ── 5.4 ───────────────────────────────────────────────────────────────────────
+\subsection{Necesidad de Razonamiento Multi-Documento}
+
+Responder preguntas operativas relevantes requiere cruzar informaci\'{o}n de m\'{u}ltiples
+documentos de distinta naturaleza. El corpus ilustra este desaf\'{i}o con el caso del
+incremento de GOR en el pozo PM-104: la explicaci\'{o}n no est\'{a} en el historial del pozo
+sino en el informe PVT del yacimiento (ca\'{i}da de presi\'{o}n por debajo de la presi\'{o}n
+de burbuja). El sistema debe poder vincular causas del entorno del reservorio con
+comportamientos registrados en el historial del pozo.
+
+% ── 5.5 ───────────────────────────────────────────────────────────────────────
+\subsection{Resoluci\'{o}n de Sin\'{o}nimos y Equivalencias T\'{e}cnicas}
+
+El sistema debe asociar consultas en lenguaje natural con terminolog\'{i}a t\'{e}cnica
+espec\'{i}fica del corpus. El documento de an\'{a}lisis se\~{n}ala dos casos concretos:
+
+\begin{itemize}
+  \item Una consulta sobre ``problemas con el cable de la BES'' debe vincularse con
+        t\'{e}rminos como VSD, aislamiento y caja de venteo.
+  \item Una consulta sobre ``profundidad de falla de la tuber\'{i}a'' debe asociarse con
+        referencias a \textit{tubing} y a ``junta \#54 a 1.620 metros''.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Valor Potencial del Sistema}
+
+% ── 6.1 ───────────────────────────────────────────────────────────────────────
+\subsection{Recuperaci\'{o}n de Lecciones Aprendidas de los Informes de An\'{a}lisis de Falla}
+
+Los informes de an\'{a}lisis de falla de sistemas BES constituyen la fuente m\'{a}s densa
+de conocimiento transferible identificada en el corpus. Las lecciones documentadas en los
+ejemplos son:
+
+\begin{itemize}
+  \item \textbf{PM-104 (2021, downthrust):} la declinaci\'{o}n del reservorio puede dejar la
+        bomba operando por debajo del caudal m\'{i}nimo del fabricante; es cr\'{i}tico tener
+        redundancia en los sensores de temperatura de fondo.
+  \item \textbf{LL-112 (2023, gas lock):} para completaciones con
+        GOR\,$>$\,150~m\textsuperscript{3}/m\textsuperscript{3} se debe instalar
+        obligatoriamente un acondicionador de fluido avanzado (AGH) aguas abajo del separador.
+  \item \textbf{CH-88 (2024, abrasi\'{o}n):} no operar el equipo BES a frecuencias superiores
+        a 55~Hz en pozos con antecedentes de flujo de arena sin antes realizar una limpieza
+        total del fondo de pozo y verificar la integridad de las mallas de retenci\'{o}n.
+  \item \textbf{VM-143 (2022, contaminaci\'{o}n t\'{e}rmica):} cambiar la especificaci\'{o}n
+        del protector a sellos tipo fuelle met\'{a}lico (\textit{metal bellows}) para
+        operaciones superiores a 110°C.
+  \item \textbf{LP-502 (2025, upthrust):} prohibir el uso de bombas Serie 400 en pozos con
+        caudales inferiores a 400~bbl/d\'{i}a.
+\end{itemize}
+
+% ── 6.2 ───────────────────────────────────────────────────────────────────────
+\subsection{Contextualizaci\'{o}n de Comportamientos de Pozos mediante Documentos de Reservorio}
+
+El cruce entre el historial de intervenciones y los documentos de reservorio permite
+explicar comportamientos que desde la perspectiva del pozo individual ser\'{i}an
+inexplicables. El corpus ofrece un ejemplo expl\'{i}cito: el Informe PVT del Yacimiento Los
+Perales (2024) permite entender el incremento de GOR en pozos del sector oeste como
+consecuencia de la ca\'{i}da de presi\'{o}n por debajo de la presi\'{o}n de burbuja
+(1.850~psi), no como un problema mec\'{a}nico del pozo.
+
+% ── 6.3 ───────────────────────────────────────────────────────────────────────
+\subsection{Mapeo del Historial de Fallas por Pozo}
+
+Los partes diarios, a pesar de su formato no estructurado, permiten construir un ``historial
+m\'{e}dico'' de cada pozo. El corpus muestra que el pozo PM-104 presenta fallas recurrentes
+de corrosi\'{o}n en varillas a media profundidad e incrustaciones que traban la bomba:
+informaci\'{o}n directamente relevante para el dise\~{n}o de cualquier intervenci\'{o}n
+futura en ese pozo.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusiones del An\'{a}lisis del Dominio}
+
+El an\'{a}lisis del dominio confirma la existencia de un volumen significativo de conocimiento
+t\'{e}cnico acumulado en cuencas maduras que actualmente no se aprovecha de forma eficiente,
+debido a la dispersi\'{o}n y falta de estructuraci\'{o}n de la documentaci\'{o}n.
+
+Los principales hallazgos son:
+
+\begin{itemize}
+  \item El corpus documental es \textbf{heterog\'{e}neo} en formato, estructura y extensi\'{o}n:
+        desde PDFs de 200 p\'{a}ginas con texto no estructurado hasta partes diarios en texto
+        libre con jerga t\'{e}cnica y abreviaturas.
+  \item Se identifican \textbf{cuatro categor\'{i}as documentales}: documentos de
+        ingenier\'{i}a y completaci\'{o}n; historial de intervenciones y reparaciones;
+        lecciones aprendidas (informes de an\'{a}lisis de falla); y estudios de reservorio y
+        geolog\'{i}a.
+  \item Los \textbf{partes diarios} son el tipo documental m\'{a}s dif\'{i}cil de procesar;
+        los \textbf{informes de an\'{a}lisis de falla} son el de mayor densidad de conocimiento
+        transferible.
+  \item La \textbf{dispersi\'{o}n documental} es el principal obst\'{a}culo: un mismo pozo
+        puede aparecer en cinco o m\'{a}s documentos de distinta naturaleza y origen sin
+        referencias cruzadas entre ellos.
+  \item Responder preguntas operativas relevantes requiere \textbf{razonamiento
+        multi-documento}, cruzando el historial del pozo con el contexto del reservorio.
+  \item La \textbf{resoluci\'{o}n de sin\'{o}nimos y equivalencias t\'{e}cnicas} es un
+        requisito funcional cr\'{i}tico, dada la variabilidad terminol\'{o}gica del dominio.
+  \item El sistema debe manejar \textbf{terminolog\'{i}a t\'{e}cnica espec\'{i}fica} (siglas,
+        unidades, nombres de formaciones, equipos) que no pertenece al vocabulario general.
+\end{itemize}
+
+Estos hallazgos validan la necesidad del sistema RAG planteado y definen con precisi\'{o}n
+los desaf\'{i}os de procesamiento que su arquitectura debe resolver.
+
+\end{document}  \item ¿A qué profundidad falla habitualmente el tubing en pozos con Gas Lift en este campo?
+  \item ¿Qué método de pesca (\textit{fishing}) funcionó mejor históricamente para este tipo de rotura?
+\end{itemize}
+
+\subsection{Consultas de detección de fallas}
+
+\begin{itemize}
+  \item ¿Qué problemas tuvimos con las BES en el yacimiento LL?
+  \item ¿El PM-104 tuvo problemas de incrustaciones antes? ¿Cómo se resolvió?
+  \item ¿A qué temperatura de fondo falló el motor BES en los pozos del sector oeste?
+  \item ¿A qué profundidad falló el cable de la BES en el VM-210?
+\end{itemize}
+
+\subsection{Consultas de comportamiento del reservorio}
+
+\begin{itemize}
+  \item ¿Por qué aumentó el GOR en el PM-104 si no se modificó el estrangulador?
+  \item ¿Qué pozos tuvieron problemas de compartimentación en la Formación Agrio?
+  \item ¿Qué pasó con los inyectores del Bloque Sur después del proyecto EOR?
+\end{itemize}
+
+\subsection{Consultas de recomendaciones y buenas prácticas}
+
+\begin{itemize}
+  \item ¿Qué peso de lodo máximo se recomienda al atravesar el intervalo de Quintuco en el bloque?
+  \item ¿Qué especificación de protector de motor se recomienda para pozos con alta temperatura de fondo?
+  \item ¿A partir de qué GOR es obligatorio instalar un acondicionador de fluido avanzado en pozos BES?
+  \item ¿Qué frecuencia máxima de operación se recomienda en pozos BES con antecedentes de flujo de arena?
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Implicancias para la Arquitectura del Sistema}
+\label{sec:arquitectura}
+
+El análisis del dominio permite derivar conclusiones directas sobre las decisiones de arquitectura del sistema RAG. Varias de estas decisiones actualizan o precisan las definidas en el anteproyecto, a partir de la evidencia concreta provista por los documentos reales.
+
+\subsection{Ingesta de documentos (ETL y OCR)}
+
+\begin{infobox}[title={\textbf{Herramienta recomendada: Docling (IBM Research)}}]
+El anteproyecto contemplaba el uso de Tesseract OCR como herramienta standalone. Tras el análisis de los documentos reales, se identificó que la diversidad de formatos (PDFs nativos, PDFs escaneados, documentos con tablas y gráficos) requiere una herramienta capaz de preservar la estructura semántica del texto y extraer tablas correctamente. Docling integra capacidades OCR junto con extracción de tablas, preservación semántica e integración directa con frameworks RAG (LangChain, LlamaIndex). Adicionalmente, es de uso gratuito y ejecutable localmente, lo que preserva la confidencialidad de los documentos operativos. Por estos motivos, se propone reemplazar Tesseract por Docling como componente principal del ETL.
+\end{infobox}
+
+Para documentos con calidad de escaneo muy baja, puede ser necesario incorporar un paso previo de preprocesamiento de imagen (aumento de contraste, enderezamiento) antes de la extracción con Docling.
+
+\subsection{Embeddings y recuperación semántica}
+
+La mezcla de español e inglés en los documentos, combinada con vocabulario técnico especializado (BES, PCP, DIFA, GOR, \textit{downthrust}, \textit{upthrust}, entre otros), hace crítica la elección del modelo de embeddings. Los modelos genéricos de embeddings en inglés son insuficientes para este dominio. Los candidatos a evaluar son:
+
+\begin{itemize}
+  \item \textbf{BGE-M3 (BAAI):} Soporte multilingüe (+100 idiomas), representación densa y dispersa simultánea, alta competitividad en recuperación semántica técnica. Adecuado para el vocabulario mixto español/inglés del dominio.
+  \item \textbf{jina-embeddings-v2-base-es (Jina AI):} Diseño bilingüe nativo español/inglés, contexto extendido de 8.192 tokens; especialmente adecuado para documentos extensos con terminología mixta como los EWRs y los informes de falla.
+\end{itemize}
+
+La decisión final debe tomarse mediante experimentación sobre documentos reales del dominio, usando métricas de precisión de recuperación como Top-K accuracy o nDCG@10 (véase Sección~\ref{sec:metricas}).
+
+\subsection{Estrategia de chunking}
+
+Los documentos del dominio tienen estructura interna variable: algunos están organizados por secciones bien definidas (EWRs, informes de falla), mientras que otros son texto libre sin estructura (partes diarios). Esto hace inadecuado el chunking de tamaño fijo, que podría cortar un incidente operativo a mitad de relato o mezclar contextos de distintos pozos.
+
+\begin{infobox}[title={\textbf{Estrategia recomendada: Hybrid Chunking de Docling}}]
+Combina chunking jerárquico (aprovechando la estructura semántica del documento cuando existe) con tokenización para evitar chunks excesivamente grandes. El tokenizador debe ser el mismo que el modelo de embeddings seleccionado, garantizando consistencia entre el procesamiento de datos y la generación de vectores.
+\end{infobox}
+
+\subsection{Base de datos vectorial}
+
+Los documentos del dominio tienen metadatos estructurados naturales: tipo de documento (EWR, parte diario, informe de falla, informe de reservorio), pozo, formación, año y bloque/área. Esto permite realizar consultas filtradas que mejoran significativamente la precisión de la recuperación, reduciendo el espacio de búsqueda antes de la comparación semántica.
+
+El esquema de metadatos estándar propuesto para la indexación es el siguiente:
+
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{3.5cm} p{3.5cm} p{5.5cm}}
+\toprule
+\rowcolor{azulheader}
+Campo & Tipo & Descripción \\
+\midrule
+\texttt{doc\_type} & string & Tipo de documento (EWR, parte\_diario, informe\_falla, reservorio, estimulacion, geologia) \\
+\rowcolor{grisclaro}
+\texttt{well\_id} & string & Identificador del pozo (ej.\ PM-104, LL-205) \\
+\texttt{year} & integer & Año del documento \\
+\rowcolor{grisclaro}
+\texttt{formation} & string & Formación geológica principal (ej.\ Quintuco, Agrio, Challacó) \\
+\texttt{field\_block} & string & Campo o bloque operativo (ej.\ Bloque Central, Bloque Sur) \\
+\rowcolor{grisclaro}
+\texttt{system\_type} & string & Sistema de extracción involucrado (BES, PCP, AIB, Gas\_Lift) \\
+\texttt{source\_file} & string & Nombre del archivo original \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{4pt}
+Cuando los metadatos no estén presentes en el documento, deberán inferirse automáticamente durante el ETL a partir del encabezado, el nombre del archivo o del contenido del texto.
+
+En cuanto a la tecnología de base de datos vectorial:
+
+\begin{itemize}
+  \item \textbf{Para prototipado:} ChromaDB (embebido, sin Docker, sin servidor requerido), en línea con lo planteado en el anteproyecto.
+  \item \textbf{Para producción con filtros complejos sobre metadatos:} Qdrant, que ofrece soporte nativo de filtrado por campos estructurados y mejor rendimiento en colecciones de gran tamaño.
+\end{itemize}
+
+\subsection{Modelo de lenguaje}
+
+Las respuestas del sistema deben ser generadas en español técnico, citando fuentes específicas (pozo, año, tipo de documento). El anteproyecto identifica como candidatos a LLaMA\,3 y Mistral; esta decisión se mantendrá abierta hasta la Fase 4, donde se realizará la evaluación comparativa según rendimiento, calidad de respuestas en el dominio y viabilidad de integración. Durante el desarrollo (Fases 2 y 3) se recomienda utilizar una API externa para evitar dependencia de hardware dedicado; en la entrega final se utilizará un modelo local para no depender de servicios externos, en línea con el requisito de confidencialidad identificado.
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Riesgos Identificados del Dominio}
+
+A partir del análisis de los documentos reales, se identificaron los siguientes riesgos específicos del dominio. Estos complementan y precisan los riesgos preliminares ya listados en el anteproyecto.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{>{\centering\bfseries}p{1.5cm} p{4.8cm} p{3.0cm} p{3.8cm}}
+\toprule
+\rowcolor{azulprimario}
+\color{white}Nivel & \color{white}Riesgo & \color{white}Impacto & \color{white}Mitigación \\
+\midrule
+\rowcolor{rojoclaro}
+\textcolor{rojo}{Alto} & Calidad variable del OCR en documentos históricos escaneados de baja resolución (ej.\ EWRs de la década de 1990). & Texto corrupto o incompleto en el índice vectorial. & Preprocesamiento de imagen (contraste, enderezamiento) + validación manual de muestras representativas. \\
+\rowcolor{rojoclaro}
+\textcolor{rojo}{Alto} & Terminología mixta español/inglés con abreviaturas técnicas propias del sector (BES, PCP, DIFA, GOR, etc.). & El modelo de embeddings puede no capturar sinónimos técnicos entre variantes. & Usar modelos multilingüe (BGE-M3 o jina-v2-es) y validar con consultas de prueba sobre el vocabulario del dominio. \\
+\rowcolor{rojoclaro}
+\textcolor{rojo}{Alto} & Ausencia de metadatos estructurados en muchos documentos (pozo, año, formación no siempre están en el encabezado). & Imposibilidad de filtrar por pozo, año o tipo en la recuperación. & Extracción automática de metadatos durante el ETL; enriquecimiento manual para documentos críticos. \\
+\rowcolor{amarilloclaro}
+\textcolor{amarillo}{Medio} & Documentos con tablas y gráficos cuyo contenido numérico es clave (producción, presiones, curvas PVT). & Pérdida de información numérica relevante si el extractor no preserva la estructura tabular. & Usar Docling con extracción de tablas habilitada; validar resultados manualmente sobre una muestra. \\
+\rowcolor{amarilloclaro}
+\textcolor{amarillo}{Medio} & Referencias implícitas entre documentos (parte diario que referencia un EWR o un informe de falla del mismo pozo). & El RAG puede no conectar eventos relacionados de distintos documentos. & Diseñar metadatos de relación (well\_id, fecha, formation) para recuperación cruzada entre tipos de documento. \\
+\rowcolor{amarilloclaro}
+\textcolor{amarillo}{Medio} & Conocimiento limitado del dominio por parte del equipo desarrollador. & Dificultad para evaluar si las respuestas del sistema son técnicamente correctas. & Validación periódica con especialistas del dominio (IGPUBA) a lo largo del desarrollo. \\
+\rowcolor{verdeclaro}
+\textcolor{verde}{Bajo} & Confidencialidad de documentos operativos reales. & Los datos no pueden procesarse en servicios cloud externos. & Despliegue 100\% local: Docling + modelo local + ChromaDB/Qdrant en infraestructura sin salida a internet. \\
+\bottomrule
+\end{tabular}
+\caption{Riesgos del dominio identificados en la Fase 1}
+\end{table}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Indicadores de Calidad del Sistema}
+\label{sec:metricas}
+
+A partir del análisis del dominio se pueden derivar los indicadores de calidad más relevantes para este proyecto:
+
+\begin{itemize}
+  \item \textbf{Top-K accuracy / nDCG@10:} Precisión del sistema de recuperación semántica; mide si los fragmentos más relevantes para una consulta aparecen entre los K resultados devueltos.
+  \item \textbf{Tasa de error OCR:} Porcentaje de caracteres mal reconocidos respecto al texto de referencia en una muestra de documentos escaneados.
+  \item \textbf{Cobertura de metadatos:} Porcentaje de documentos con los campos \texttt{doc\_type}, \texttt{well\_id} y \texttt{year} correctamente poblados tras el ETL.
+  \item \textbf{Latencia de respuesta:} Tiempo promedio de respuesta del sistema RAG extremo a extremo (desde consulta hasta respuesta generada).
+  \item \textbf{Calidad técnica de respuestas:} Evaluación supervisada por especialistas del dominio (IGPUBA) sobre coherencia, relevancia y precisión técnica de las respuestas generadas.
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Conclusiones y Próximos Pasos}
+
+El análisis del dominio confirmó la viabilidad técnica del sistema propuesto y permitió derivar las siguientes conclusiones:
+
+\begin{itemize}
+  \item La información histórica en cuencas maduras es abundante y valiosa, pero se encuentra en formatos heterogéneos y altamente dispersa, sin metadatos estructurados consistentes.
+  \item Los tipos de documentos identificados abarcan desde texto libre (partes diarios del Company Man) hasta informes estructurados (EWRs, informes de falla, estudios PVT), lo que requiere un pipeline ETL flexible.
+  \item La terminología técnica mixta español/inglés hace crítica la elección del modelo de embeddings; modelos genéricos en inglés son insuficientes. Los candidatos BGE-M3 y jina-embeddings-v2-base-es serán evaluados comparativamente en la Fase 3.
+  \item Los metadatos estructurados (pozo, año, tipo de documento, formación, bloque) son esenciales para mejorar la precisión de la recuperación y deben ser extraídos o inferidos durante el ETL.
+  \item Docling reemplaza a Tesseract como herramienta principal de ingesta, por su soporte de tablas, preservación semántica, integración con frameworks RAG y ejecución local.
+  \item El Hybrid Chunking de Docling es la estrategia más adecuada para la segmentación, dado el carácter variable y jerárquico de los documentos del dominio.
+  \item Se incorporó al análisis un séptimo caso de falla (YPF-X2, 2017) referido a corrosión por CO\textsubscript{2} y bacterias BSR, no contemplado en la versión preliminar del análisis.
+\end{itemize}
+
+\subsection*{Próximos pasos — Fase 2}
+
+\begin{enumerate}
+  \item Implementar el pipeline ETL con Docling sobre una muestra representativa de documentos reales del dominio.
+  \item Evaluar la calidad del OCR en documentos escaneados históricos e identificar los casos que requieren preprocesamiento de imagen.
+  \item Implementar y validar el esquema de metadatos propuesto en la Sección~\ref{sec:arquitectura}; ajustar los campos según los resultados del procesamiento real.
+  \item Ejecutar el primer ciclo de pruebas de recuperación semántica sobre los documentos procesados.
+  \item Evaluar comparativamente los modelos de embeddings candidatos (BGE-M3 vs.\ jina-v2-base-es) mediante métricas Top-K accuracy sobre consultas representativas del dominio.
+  \item Coordinar una primera sesión de validación con especialistas del IGPUBA para revisar los patrones de consulta identificados y la correcta interpretación de los documentos del dominio.
+\end{enumerate}
+
+\vfill
+
+\begin{center}
+{\color{azulsecundario}\rule{0.6\linewidth}{0.6pt}}\\[0.3em]
+{\color{gray}\small\itshape Fin del documento — Análisis del Dominio v1.0}
+\end{center}
+
+\end{document}
+  \vspace{2.5cm}
+
+  {\scshape\Large Trabajo Profesional --- Sistema RAG para la\\[0.3cm]
+  Gestión de Conocimiento Técnico\par}
+
+  \vspace{0.5cm}
+  {\large\itshape Recuperación inteligente de información histórica de cuencas maduras\par}
+
+  \vspace{3cm}
+
+  \begin{flushleft}
+    \textbf{INTEGRANTES:}\\[0.4cm]
+    \begin{tabular}{lll}
+      \#108456 & Finci, Dante Alejandro       & \href{mailto:dfinci@fi.uba.ar}{dfinci@fi.uba.ar} \\
+      \#110883 & Lanfranco, Tomás             & \href{mailto:tomilanfranco04@gmail.com}{tomilanfranco04@gmail.com} \\
+      \#102815 & Rodriguez, Franco Ezequiel   & \href{mailto:frrodriguez@fi.uba.ar}{frrodriguez@fi.uba.ar} \\
+      \#109525 & Urbano, Sol Guadalupe        & \href{mailto:surbano@fi.uba.ar}{surbano@fi.uba.ar} \\
+    \end{tabular}
+  \end{flushleft}
+
+  \vspace{1.5cm}
+
+  \begin{flushleft}
+    \textbf{Tutor:} Dr.\ Hernán Daniel Merlino --- \href{mailto:hmerlino@fi.uba.ar}{hmerlino@fi.uba.ar}\\[0.3cm]
+    \textbf{Co-tutora:} Dra.\ Gabriela Beatriz Savioli
+  \end{flushleft}
+
+\end{titlepage}
+
+% ─── ÍNDICE ─────────────────────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{1. Resumen}
+\addcontentsline{toc}{chapter}{1. Resumen}
+
+% TODO: Completar con el resumen final del trabajo.
+\textit{[Pendiente --- completar al finalizar el proyecto.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{2. Abstract}
+\addcontentsline{toc}{chapter}{2. Abstract}
+
+% TODO: Completar con el abstract en inglés.
+\textit{[Pendiente --- completar al finalizar el proyecto.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{3. Palabras clave / Keywords}
+\addcontentsline{toc}{chapter}{3. Palabras clave / Keywords}
+
+\textbf{Palabras clave:} RAG, gestión de conocimiento técnico, cuencas maduras, LLMs,
+base de datos vectorial, ETL, OCR, pozos análogos, recuperación semántica.
+
+\textbf{Keywords:} RAG, technical knowledge management, mature basins, LLMs,
+vector database, ETL, OCR, analog wells, semantic retrieval.
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{4. Agradecimientos}
+\addcontentsline{toc}{chapter}{4. Agradecimientos}
+
+% TODO: Completar con agradecimientos.
+\textit{[Pendiente.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{5. Introducción}
+\addcontentsline{toc}{chapter}{5. Introducción}
+
+En la industria del petróleo y gas, la explotación de cuencas maduras genera a lo largo del
+tiempo grandes volúmenes de información técnica: intervenciones realizadas, decisiones tomadas
+y resultados obtenidos quedan registrados en informes, diagramas de completación y registros
+operativos.
+
+Esta documentación representa un activo de conocimiento valioso, ya que refleja décadas de
+experiencia concreta sobre el comportamiento de los yacimientos. Sin embargo, se encuentra
+dispersa y en formatos no estructurados, lo que dificulta su acceso y aprovechamiento,
+limitando la reutilización del conocimiento experto.
+
+El objetivo de este trabajo es mejorar el acceso y la recuperación de esa información. Para ello
+se propone el desarrollo de un sistema basado en una arquitectura de Generación Aumentada
+por Recuperación (RAG), apoyado en modelos de lenguaje de gran escala (LLMs). Asimismo,
+se contempla el uso de una base de datos vectorial junto con procesos de ingesta de datos (ETL)
+que incorporan OCR para el tratamiento de documentos históricos.
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{6. Estado del Arte}
+\addcontentsline{toc}{chapter}{6. Estado del Arte}
+
+\section*{6.1 Modelos de Lenguaje de Gran Escala (LLMs)}
+
+% TODO: Completar con investigación de Fran sobre LLMs.
+\textit{[Ver sección de Investigación --- Franco Rodriguez.]}
+
+\section*{6.2 Arquitecturas RAG}
+
+% TODO: Completar.
+\textit{[Pendiente.]}
+
+\section*{6.3 Bases de Datos Vectoriales}
+
+% TODO: Completar con investigación de Dante sobre bases de datos vectoriales.
+\textit{[Ver sección de Investigación --- Dante Finci.]}
+
+\section*{6.4 Embeddings y Representación Semántica}
+
+% TODO: Completar con investigación de Sol sobre embeddings.
+\textit{[Ver sección de Investigación --- Sol Urbano.]}
+
+\section*{6.5 OCR y Procesamiento de Documentos}
+
+% TODO: Completar con investigación de Tomi sobre ETL y OCR.
+\textit{[Ver sección de Investigación --- Tomás Lanfranco.]}
+
+\section*{6.6 Aplicaciones en la Industria del Petróleo y Gas}
+
+% TODO: Completar con referencias a trabajos similares en el dominio.
+\textit{[Pendiente.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{7. Problema Detectado y/o Faltante}
+\addcontentsline{toc}{chapter}{7. Problema Detectado y/o Faltante}
+
+En el contexto de cuencas maduras, las decisiones técnicas tomadas a lo largo de décadas
+quedan registradas en grandes volúmenes de documentación: informes de intervenciones,
+diagramas de completación y registros operativos. Esta información representa un activo
+importante, ya que refleja qué funcionó y qué no en situaciones concretas a lo largo del tiempo.
+
+El problema es que dicha documentación no está centralizada ni estructurada. Consultar
+antecedentes de un pozo o buscar experiencias previas en situaciones similares requiere revisar
+manualmente archivos dispersos. En la práctica, esto lleva a que ese conocimiento acumulado no
+se aproveche de forma eficiente, aumentando el riesgo de repetir errores ya documentados y
+dificultando la transferencia de experiencia entre profesionales del sector.
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{8. Solución Implementada}
+\addcontentsline{toc}{chapter}{8. Solución Implementada}
+
+\section*{8.1 Arquitectura Diseñada}
+
+% TODO: Completar con el diagrama de arquitectura final y descripción.
+\textit{[Pendiente --- incluir diagrama de arquitectura.]}
+
+\section*{8.2 Pipeline ETL y OCR}
+
+% TODO: Completar con la implementación del pipeline.
+\textit{[Pendiente.]}
+
+\section*{8.3 Generación de Embeddings}
+
+% TODO: Completar con el modelo de embeddings seleccionado y justificación.
+\textit{[Pendiente.]}
+
+\section*{8.4 Base de Datos Vectorial}
+
+% TODO: Completar con la implementación de la base de datos vectorial.
+\textit{[Pendiente.]}
+
+\section*{8.5 Integración del Modelo de Lenguaje}
+
+% TODO: Completar con el LLM seleccionado, justificación e integración.
+\textit{[Pendiente.]}
+
+\section*{8.6 Interfaz de Consulta}
+
+% TODO: Completar con la interfaz desarrollada (API o UI).
+\textit{[Pendiente.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{9. Investigación Tecnológica}
+\addcontentsline{toc}{chapter}{9. Investigación Tecnológica}
+
+Esta sección documenta la investigación realizada por cada integrante del equipo sobre los
+componentes tecnológicos del sistema.
+
+% ─── 9.1 LLM ────────────────────────────────────────────────────────────────
+\section*{9.1 Modelos de Lenguaje}
+
+\subsection*{¿Cómo correr un LLM localmente?}
+
+La forma más práctica para este proyecto es usando \textbf{Ollama}, una herramienta que
+permite descargar y ejecutar modelos como LLaMA~3 o Mistral con un solo comando, sin
+configuración compleja. Desde Python se consume mediante una librería simple.
+
+Alternativamente, \textbf{llama.cpp} con su wrapper de Python \texttt{llama-cpp-python}
+ofrece mayor flexibilidad, aunque requiere una configuración más elaborada.
+
+\subsection*{Requisitos de hardware}
+
+Los modelos vienen en distintos tamaños medidos en parámetros. Para desarrollo sin GPU,
+los modelos \textbf{cuantizados} (formato \texttt{.gguf}) corren en CPU con 8--16\,GB de
+RAM, aunque con menor velocidad.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Modelo} & \textbf{RAM mínima} & \textbf{GPU recomendada} \\
+    \midrule
+    LLaMA 3 8B (cuantizado) & 8\,GB  & No obligatoria \\
+    LLaMA 3 70B             & 40+\,GB & Casi obligatoria \\
+    Mistral 7B (cuantizado) & 6\,GB  & No obligatoria \\
+    \bottomrule
+  \end{tabular}
+  \caption{Requisitos de hardware por modelo}
+\end{table}
+
+\subsection*{Estrategia de desarrollo vs.\ producción}
+
+\begin{itemize}
+  \item \textbf{Durante desarrollo y pruebas:} se recomienda usar una API externa
+    (OpenAI, Anthropic) para avanzar en el pipeline sin necesidad de hardware dedicado.
+  \item \textbf{En la entrega final:} se utiliza el modelo local (LLaMA~3 o Mistral)
+    para no depender de servicios externos.
+\end{itemize}
+
+Otra opción liviana es \textbf{Phi-3 mini} de Microsoft, que corre en hardware modesto
+y tiene buen rendimiento para tareas de Q\&A sobre documentos.
+
+% ─── 9.2 Base de datos vectorial ────────────────────────────────────────────
+\section*{9.2 Base de Datos Vectorial}
+
+\subsection*{Comparación de herramientas}
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Característica} & \textbf{ChromaDB} & \textbf{FAISS} & \textbf{Weaviate} & \textbf{Qdrant} \\
+    \midrule
+    Tipo              & BD Vectorial   & Librería índice & BD + GraphQL & BD moderna \\
+    Persistencia      & Sí (SQLite)    & Manual          & Sí           & Sí \\
+    Servidor requerido & No            & No              & Sí (Docker)  & Sí (Docker) \\
+    Metadatos/filtros & Sí            & No nativo       & Sí (avanzado)& Sí (potente) \\
+    Escalabilidad     & Media          & Alta            & Alta         & Alta \\
+    Licencia          & Apache 2.0     & MIT             & BSD-3        & Apache 2.0 \\
+    Ideal para        & Prototipado    & Investigación   & Enterprise   & Producción \\
+    \bottomrule
+  \end{tabular}
+  \caption{Comparación de bases de datos vectoriales}
+\end{table}
+
+\subsection*{Recomendación para el proyecto}
+
+Dado que los documentos del sistema tienen metadatos estructurados (\texttt{TIPO},
+\texttt{ÁREA}, \texttt{AÑO}, \texttt{POZO}, \texttt{SECCIÓN}), se pueden realizar
+consultas filtradas del tipo:
+
+\begin{itemize}
+  \item \textit{``¿Qué pozos tuvieron problemas de compartimentación?''} →
+    \texttt{TIPO = Caracterización Estructural}
+  \item \textit{``¿Qué pasó con los inyectores en 2024?''} →
+    \texttt{AÑO = 2024 + POZO contiene PI-}
+  \item \textit{``Todos los informes de seguimiento de inyección''} →
+    \texttt{TIPO = Seguimiento de Inyección}
+\end{itemize}
+
+Para \textbf{prototipado local} se recomienda \textbf{ChromaDB} (modo embebido, sin
+Docker). Para \textbf{producción con filtros complejos sobre metadatos}, \textbf{Qdrant}
+es la opción más adecuada dado el nivel de estructura de los documentos del dominio.
+
+\begin{lstlisting}[caption={Ejemplo de uso con ChromaDB}]
+import chromadb
+from chromadb.utils import embedding_functions
+
+client = chromadb.PersistentClient(path="./db")
+ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+    "all-MiniLM-L6-v2"
+)
+collection = client.get_or_create_collection(
+    "documentos", embedding_function=ef
+)
+
+# Indexar
+collection.add(
+    documents=["Texto del documento..."],
+    metadatas=[{"tipo": "EWR", "pozo": "PM-104", "anio": 2012}],
+    ids=["doc1"]
+)
+
+# Consultar con filtro
+resultados = collection.query(
+    query_texts=["perdida de circulacion en Quintuco"],
+    n_results=3,
+    where={"tipo": "EWR"}
+)
+\end{lstlisting}
+
+% ─── 9.3 Embeddings ─────────────────────────────────────────────────────────
+\section*{9.3 Embeddings --- Sol}
+
+\subsection*{Modelos de embeddings en español o bilingüe}
+
+En el contexto de este proyecto, donde la documentación técnica está predominantemente en español con terminología mixta del sector petrolero, la elección del modelo de embeddings resulta una decisión crítica que no puede limitarse a la opción genérica inicialmente planteada.
+
+Dentro de las alternativas gratuitas y de código abierto relevadas, se identificaron tres candidatos principales.
+
+El primero es \texttt{paraphrase-multilingual-MiniLM-L12-v2}, disponible en la librería sentence-transformers. Es el modelo multilingüe más descargado en Hugging Face, soporta más de 50 idiomas incluyendo español, y puede ejecutarse en hardware modesto gracias a sus 384 dimensiones. Su principal limitación es un rendimiento inferior en tareas de recuperación semántica frente a modelos más recientes, por lo que se lo considera un punto de partida válido para validar el pipeline pero no necesariamente la opción final.
+
+El segundo candidato es \texttt{BGE-M3}, desarrollado por el Beijing Academy of Artificial Intelligence (BAAI) y disponible gratuitamente. Es actualmente el modelo open-source de referencia para recuperación multilingüe, con soporte para más de 100 idiomas. Su ventaja diferencial para este proyecto es que combina recuperación densa, dispersa y multi-vector en un mismo modelo, lo que mejora la precisión en dominios con vocabulario técnico específico como geología e ingeniería de petróleo. Está integrado nativamente con las principales bases de datos vectoriales y frameworks de RAG.
+
+El tercero es \texttt{jina-embeddings-v2-base-es}, un modelo bilingüe español/inglés desarrollado por Jina AI, disponible de forma gratuita. Fue entrenado específicamente para soportar entradas mixtas en ambos idiomas sin sesgo hacia ninguno, y admite secuencias de hasta 8192 tokens, lo que lo convierte en una opción relevante cuando los documentos históricos son extensos o cuando las consultas y el corpus combinan terminología en español e inglés, situación habitual en la industria petrolera argentina.
+
+También existe una colección de modelos fine-tuneados específicamente para español, publicada en Hugging Face bajo el usuario \texttt{mrm8488}, que podría resultar útil si el corpus es predominantemente en español y se requiere mayor precisión monolingüe.
+
+\subsection*{Comparación de sentence-transformers con otras opciones}
+
+La librería sentence-transformers no constituye un modelo en sí mismo, sino un framework que permite utilizar distintos modelos de embeddings mediante una interfaz unificada. Es importante aclarar que la calidad de los embeddings no depende del framework, sino del modelo específico que se utilice.
+
+En este contexto, la comparación relevante se centra en los modelos de embeddings disponibles de forma gratuita y con capacidad de ejecución local.
+
+\texttt{paraphrase-multilingual-MiniLM-L12-v2} dentro del framework sentence-transformers es rápido, liviano y bien documentado, pero su rendimiento en recuperación semántica en español es inferior al de alternativas más modernas. Es adecuado para prototipar el sistema y validar la integración de componentes en las primeras iteraciones.
+
+\texttt{BGE-M3}, también usable a través de sentence-transformers, representa un salto cualitativo en calidad de recuperación multilingüe. La literatura reciente indica que para proyectos con requerimiento multilingüe o en idiomas distintos al inglés, BGE-M3 es la primera opción a considerar entre los modelos gratuitos. Su mayor peso computacional es la principal contrapartida, ya que requiere más memoria GPU para la inferencia.
+
+\texttt{jina-embeddings-v2-base-es} se diferencia por su diseño bilingüe nativo y su soporte de contexto largo, lo que lo convierte en un candidato especialmente interesante para documentos técnicos extensos que combinan ambos idiomas.
+
+La conclusión práctica es que la elección entre estos modelos no puede hacerse de antemano: debe resolverse mediante experimentación sobre documentos reales del dominio, utilizando métricas de recuperación como Top-K accuracy o nDCG@10, tal como está previsto en la Fase 3 del plan de actividades.
+
+\subsection*{Cómo afecta el idioma a la calidad de los embeddings}
+
+El idioma del corpus es uno de los factores que más impacta en la calidad de la recuperación semántica y, al mismo tiempo, uno de los que con mayor frecuencia se subestima al diseñar sistemas RAG.
+
+El primer problema es la subrepresentación del español en los modelos generales. Análisis comparativos muestran que el español consistentemente obtiene métricas de recuperación más bajas que el inglés, el alemán o el chino, incluso en modelos entrenados con datos multilingüe. La causa es que los corpus de preentrenamiento están dominados por texto en inglés, lo que sesga el espacio vectorial resultante y degrada la calidad de los embeddings para otros idiomas.
+
+El segundo problema es el vocabulario técnico de dominio. Los modelos de embeddings generales no han sido expuestos a terminología específica como cuencas maduras, completación, registros de producción, workover o intervenciones, conceptos centrales en este proyecto. Esto genera que términos técnicos semánticamente relacionados queden distantes en el espacio vectorial, perjudicando directamente la recuperación de documentos relevantes ante consultas especializadas.
+
+El tercer problema es el alineamiento semántico entre idiomas. En modelos multilingüe, no alcanza con que el modelo soporte múltiples idiomas: lo que determina la calidad de la recuperación cross-lingual es si los espacios vectoriales de cada idioma están efectivamente alineados. Un buen alineamiento implica que un término como ``reservoir'' en inglés y ``yacimiento'' en español queden representados por vectores cercanos. Sin ese alineamiento, una consulta en español no recuperará correctamente documentos con terminología en inglés aunque sean semánticamente equivalentes. Dado que los informes históricos en la industria petrolera argentina suelen mezclar ambos idiomas, este aspecto es particularmente relevante para el proyecto.
+
+El cuarto problema es el límite de contexto. La mayoría de los modelos open-source heredan un límite de 512 tokens de las arquitecturas BERT en las que se basan. En la práctica, cuando un fragmento de documento supera ese límite, el modelo lo trunca silenciosamente, descartando contenido que puede ser semánticamente relevante. Esto refuerza la interdependencia entre la elección del modelo de embeddings y la estrategia de chunking: ambas decisiones deben tomarse en conjunto, no de forma independiente, dado que el tamaño de los fragmentos debe ser compatible con la ventana de contexto del modelo seleccionado.
+
+% ─── 9.4 ETL y OCR ──────────────────────────────────────────────────────────
+\section*{9.4 ETL y OCR --- Tomás}
+
+% TODO: Tomi completa esta sección con su investigación sobre ETL y OCR.
+\textit{[Pendiente --- Tomás Lanfranco completará esta sección.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{10. Riesgos Materializados y Lecciones Aprendidas}
+\addcontentsline{toc}{chapter}{10. Riesgos Materializados y Lecciones Aprendidas}
+
+% TODO: Completar durante y al finalizar el desarrollo.
+\textit{[Pendiente.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{11. Metodología Aplicada}
+\addcontentsline{toc}{chapter}{11. Metodología Aplicada}
+
+El proyecto se desarrolló bajo una metodología incremental, organizada en iteraciones que
+incluyeron actividades de análisis, implementación, pruebas y mejora continua. Se utilizó
+Scrum para la gestión del trabajo, organizando el desarrollo en sprints de una a dos semanas,
+con un tablero Kanban en GitHub Projects para el seguimiento de tareas.
+
+% TODO: Completar con reflexión sobre cómo se aplicó la metodología en la práctica.
+\textit{[Completar con experiencia real durante el desarrollo.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{12. Experimentación y/o Validación}
+\addcontentsline{toc}{chapter}{12. Experimentación y/o Validación}
+
+\section*{12.1 Pruebas Unitarias}
+
+% TODO: Completar con resultados de pruebas unitarias por módulo.
+\textit{[Pendiente.]}
+
+\section*{12.2 Pruebas de Integración}
+
+% TODO: Completar con resultados de pruebas de integración.
+\textit{[Pendiente.]}
+
+\section*{12.3 Pruebas Funcionales End-to-End}
+
+% TODO: Completar con consultas de prueba y resultados obtenidos.
+\textit{[Pendiente.]}
+
+\section*{12.4 Métricas de Calidad}
+
+% TODO: Completar con resultados de Top-K accuracy, latencia, tasa de error OCR.
+\textit{[Pendiente.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{13. Cronograma de Actividades Realizadas}
+\addcontentsline{toc}{chapter}{13. Cronograma de Actividades Realizadas}
+
+% TODO: Completar con el cronograma real vs. planificado.
+\textit{[Pendiente --- comparar con el plan de actividades del anteproyecto.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{14. Impactos Sociales y Ambientales del Proyecto}
+\addcontentsline{toc}{chapter}{14. Impactos Sociales y Ambientales del Proyecto}
+
+\section*{14.1 Impacto Económico}
+
+El sistema propuesto permite optimizar el uso de la información disponible, reduciendo la
+repetición de errores operativos y mejorando la toma de decisiones en la operación de
+cuencas maduras.
+
+\section*{14.2 Impacto Social}
+
+Facilita el acceso al conocimiento técnico acumulado, promoviendo una mejor transferencia
+de conocimiento experto dentro del ámbito profesional y reduciendo la dependencia de
+personas específicas como repositorios de conocimiento tácito.
+
+\section*{14.3 Impacto Ambiental}
+
+La mejora en la toma de decisiones operativas contribuye a reducir errores que puedan
+generar efectos ambientales negativos, favoreciendo un uso más eficiente de los recursos
+en las operaciones de extracción.
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{15. Trabajos Futuros}
+\addcontentsline{toc}{chapter}{15. Trabajos Futuros}
+
+% TODO: Completar con posibles extensiones y mejoras identificadas durante el desarrollo.
+\textit{[Pendiente.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{16. Conclusiones}
+\addcontentsline{toc}{chapter}{16. Conclusiones}
+
+% TODO: Completar al finalizar el proyecto.
+\textit{[Pendiente.]}
+
+% ════════════════════════════════════════════════════════════════════════════
+\chapter*{Anexos}
+\addcontentsline{toc}{chapter}{Anexos}
+
+\section*{A. Estructura del Repositorio}
+
+\begin{lstlisting}[language=bash, caption={Estructura del proyecto}]
+rag-knowledge-system/
+├── data/
+│   ├── raw/            # Documentos originales
+│   ├── processed/      # Texto procesado y segmentado
+│   └── vectorstore/    # Base de datos vectorial
+├── src/
+│   ├── etl/            # Ingesta, OCR y chunking
+│   ├── embeddings/     # Generacion de vectores
+│   ├── retrieval/      # Busqueda semantica
+│   ├── llm/            # Integracion del modelo de lenguaje
+│   └── interface/      # API o interfaz de consulta
+└── tests/              # Pruebas unitarias y de integracion
+\end{lstlisting}
+
+\section*{B. Tipos de Documentos Procesados}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Tipo} & \textbf{Descripción} \\
+    \midrule
+    EWR           & Informe Final de Perforación (End of Well Report) \\
+    WORKOVER      & Informe Técnico de Workover \\
+    ESTIMULACION  & Informe de Estimulaciones y Fracturas \\
+    FALLA         & Informe de Análisis de Falla \\
+    PARTE\_DIARIO  & Parte Diario de Operaciones \\
+    INYECCION     & Informe de Seguimiento de Inyección \\
+    GEOLOGIA      & Informe de Caracterización Estructural \\
+    PVT           & Estudios PVT y Análisis de Fluidos \\
+    EOR           & Informes de Proyectos de Recuperación Mejorada \\
+    SEDIMENTOLOGIA& Estudios Sedimentológicos \\
+    \bottomrule
+  \end{tabular}
+  \caption{Tipos de documentos del sistema}
+\end{table}
+
+% ─── Bibliografía ────────────────────────────────────────────────────────────
+\chapter*{Referencias}
+\addcontentsline{toc}{chapter}{Referencias}
+
+\begin{enumerate}
+  \item Lewis, P., et al.\ (2020). Retrieval-augmented generation for knowledge-intensive
+    NLP tasks. \textit{NeurIPS}. \url{https://arxiv.org/abs/2005.11401}
+
+  \item Dubey, A., et al.\ (2024). The Llama 3 herd of models. \textit{arXiv}.
+    \url{https://arxiv.org/abs/2407.21783}
+
+  \item Ma, Z., et al.\ (2024). Information extraction from historical well records using
+    a large language model. \textit{Scientific Reports}.
+    \url{https://doi.org/10.1038/s41598-024-81846-5}
+
+  \item Guevara, J., et al.\ (2017). A data-driven workflow for predicting horizontal well
+    production using vertical well logs. \textit{arXiv}.
+    \url{https://arxiv.org/abs/1705.06556}
+
+  \item Sinha, R., \& B.\ S.\ (2025). Digitization of document and information extraction
+    using OCR. \url{https://arxiv.org/abs/2506.11156}
+\end{enumerate}
+
+\end{document}
